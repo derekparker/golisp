@@ -41,7 +41,7 @@ func MakeFunction(name string, params *Data, body *Data, parentEnv *SymbolTableF
 }
 
 func (self *Function) String() string {
-	return fmt.Sprintf("<func: %s>", self.Name)
+	return fmt.Sprintf("<func: %s> %s", self.Name, self.Body)
 }
 
 func (self *Function) makeLocalBindings(args *Data, argEnv *SymbolTableFrame, localEnv *SymbolTableFrame, eval bool) (err error) {
@@ -86,8 +86,15 @@ func (self *Function) makeLocalBindings(args *Data, argEnv *SymbolTableFrame, lo
 	return nil
 }
 
-func (self *Function) internalApply(args *Data, argEnv *SymbolTableFrame, eval bool) (result *Data, err error) {
-	localEnv := NewSymbolTableFrameBelow(self.Env)
+func (self *Function) internalApply(args *Data, argEnv *SymbolTableFrame, eval bool, extensionEnv ...*SymbolTableFrame) (result *Data, err error) {
+	var env *SymbolTableFrame
+	if extensionEnv == nil {
+		env = self.Env
+	} else {
+		env = extensionEnv[0]
+	}
+
+	localEnv := NewSymbolTableFrameBelow(env)
 	err = self.makeLocalBindings(args, argEnv, localEnv, eval)
 	if err != nil {
 		return
@@ -101,12 +108,12 @@ func (self *Function) internalApply(args *Data, argEnv *SymbolTableFrame, eval b
 	return
 }
 
-func (self *Function) Apply(args *Data, argEnv *SymbolTableFrame) (result *Data, err error) {
-	return self.internalApply(args, argEnv, true)
+func (self *Function) Apply(args *Data, argEnv *SymbolTableFrame, extensionEnv ...*SymbolTableFrame) (result *Data, err error) {
+	return self.internalApply(args, argEnv, true, extensionEnv...)
 }
 
-func (self *Function) ApplyWithoutEval(args *Data, argEnv *SymbolTableFrame) (result *Data, err error) {
-	return self.internalApply(args, argEnv, false)
+func (self *Function) ApplyWithoutEval(args *Data, argEnv *SymbolTableFrame, extensionEnv ...*SymbolTableFrame) (result *Data, err error) {
+	return self.internalApply(args, argEnv, false, extensionEnv...)
 }
 
 func (self *Function) ApplyOveriddingEnvironment(args *Data, argEnv *SymbolTableFrame) (result *Data, err error) {

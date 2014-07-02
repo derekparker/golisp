@@ -697,7 +697,7 @@ func Eval(d *Data, env *SymbolTableFrame, extensionEnv ...*SymbolTableFrame) (re
 			}
 
 			args := Cdr(d)
-			result, err = Apply(function, args, searchEnv)
+			result, err = Apply(function, args, env, extensionEnv...)
 			if err != nil {
 				err = errors.New(fmt.Sprintf("\nEvaling %s. %s", String(d), err))
 				return
@@ -712,18 +712,18 @@ func Eval(d *Data, env *SymbolTableFrame, extensionEnv ...*SymbolTableFrame) (re
 	return d, nil
 }
 
-func Apply(function *Data, args *Data, env *SymbolTableFrame) (result *Data, err error) {
+func Apply(function *Data, args *Data, env *SymbolTableFrame, extensionEnv ...*SymbolTableFrame) (result *Data, err error) {
 	if function == nil {
 		err = errors.New("Nil when function expected.")
 		return
 	}
 	switch function.Type {
 	case FunctionType:
-		return function.Func.Apply(args, env)
+		return function.Func.Apply(args, env, extensionEnv...)
 	case MacroType:
 		return function.Mac.Apply(args, env)
 	case PrimitiveType:
-		return function.Prim.Apply(args, env)
+		return function.Prim.Apply(args, env, extensionEnv...)
 	}
 	return
 }
